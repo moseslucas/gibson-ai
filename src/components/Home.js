@@ -9,6 +9,7 @@ import {List, ListItem} from 'material-ui/List'
 import Subheader from 'material-ui/Subheader'
 import Divider from 'material-ui/Divider'
 import axios from 'axios'
+import swal from 'sweetalert'
 
 class Home extends Component {
   constructor () {
@@ -70,7 +71,56 @@ class Home extends Component {
   }
 
   addUser (user) {
+    swal("Add to Dataset ?", {
+      buttons: {
+        cancel: "Back",
+        add: true,
+      },
+    })
+    .then((value) => {
+      if (value === 'add') {
+        axios({
+          method: 'post',
+          url: 'http://localhost:4000/twit/tweets',
+          data: {
+            q: user.screen_name
+          }
+        }).then( data => {
+          if (data.data.error === 'Not authorized.') {
+            swal('Private Account', 'We can only get tweets from Public Accounts', 'warning')
+          } else {
+            console.log('data: ', data)
+            console.log('statuses: ', data)
+            let dataset = localStorage.dataset === undefined ? [] : JSON.parse(localStorage.dataset)
+            let importDataSet = this.normalizeTweets(data.data, user.screen_name)
+            dataset = dataset.filter( ds => ds.username !== importDataSet[0].username )
+            dataset = dataset.concat(importDataSet)
+            localStorage.setItem('dataset', JSON.stringify(dataset))
+            console.log('localStorage dataset: ', localStorage.dataset)
+            swal('Added', 'Added recent tweets to dataset', 'success')
+          }
+        })
+      }
+    })
   }
+
+  normalizeTweets (tweets, screen_name) {
+    console.log('weill normalize: ', tweets)
+    let normalizedTweets = []
+    tweets.map( tweet => {
+      if (tweet.text.substring(0,2) !== 'RT' && tweet.user.screen_name === screen_name) {
+        normalizedTweets.push({
+          id: tweet.user.id,
+          username: tweet.user.screen_name,
+          img: tweet.user.profile_image_url,
+          name: tweet.user.name,
+          text: tweet.text
+        })
+      }
+    })
+    return normalizedTweets
+  }
+
   renderSearchResult () {
     const { searchedUsers } = this.state
     console.log(searchedUsers)
@@ -132,7 +182,7 @@ class Home extends Component {
         return this.add()
         break
       default:
-        return this.main()
+        return this.add()
     }
   }
 }

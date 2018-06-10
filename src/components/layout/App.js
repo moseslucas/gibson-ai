@@ -43,7 +43,8 @@ class App extends React.Component{
         open={this.state.openDrawer}
         onRequestChange={(openDrawer) => this.setState({openDrawer})}>
         {/* <Link to='/'><MenuItem onClick={this.closeDrawer}> Home </MenuItem></Link> */}
-        <a target='_new' href='https:/github.com/moseslucas'><MenuItem onClick={this.closeDrawer}> Check on Github </MenuItem></a>
+        <a target='_new' href='https:/github.com/moseslucas/gibson-ai'><MenuItem onClick={this.closeDrawer}> Check on Github </MenuItem></a>
+        <a target='_new' href='https:/github.com/moseslucas/gibson-ai-api'><MenuItem onClick={this.closeDrawer}> API </MenuItem></a>
       </Drawer>
       {this.props.children}
     </MuiThemeProvider>
