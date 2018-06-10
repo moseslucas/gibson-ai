@@ -14,15 +14,14 @@ import swal from 'sweetalert'
 class Home extends Component {
   constructor () {
     super()
+    this.addUser = this.addUser.bind(this)
     this.renderSearchResult = this.renderSearchResult.bind(this)
     this.searchUser = this.searchUser.bind(this)
     this.backButton = this.backButton.bind(this)
     this.renderTweets = this.renderTweets.bind(this)
     this.state = {
       screen: 'main',
-      twits: [
-        {id: 1, img: 'http://pbs.twimg.com/profile_images/966996444245716992/RX8-8Z-e_normal.jpg', username: 'lukeses09', name: 'Moses Lucas', text: 'Test Tweet' }
-      ],
+      twits: localStorage.dataset === undefined ? [] : JSON.parse(localStorage.dataset),
       searchedUsers: []
     }
   }
@@ -33,7 +32,7 @@ class Home extends Component {
   addButton () {
     return (
       <FloatingActionButton
-        style={{position: 'absolute', bottom: 30, right: 30}}
+        style={{position: 'fixed', bottom: 30, right: 30}}
         onClick={ () => this.setState({screen: 'add', searchedUsers: []}) }>
         <Ionicon icon="md-add" fontSize='30px'/>
       </FloatingActionButton>
@@ -50,8 +49,8 @@ class Home extends Component {
 
   renderTweets () {
     const { twits } = this.state
-    return twits.map( twit => {
-      return <tr key={twit.id}>
+    return twits.map( (twit, i) => {
+      return <tr key={i}>
         <td><img src={twit.img} className='img-circle' /></td>
         <td>{twit.username}</td>
         <td>{twit.name}</td>
@@ -89,14 +88,12 @@ class Home extends Component {
           if (data.data.error === 'Not authorized.') {
             swal('Private Account', 'We can only get tweets from Public Accounts', 'warning')
           } else {
-            console.log('data: ', data)
-            console.log('statuses: ', data)
             let dataset = localStorage.dataset === undefined ? [] : JSON.parse(localStorage.dataset)
             let importDataSet = this.normalizeTweets(data.data, user.screen_name)
             dataset = dataset.filter( ds => ds.username !== importDataSet[0].username )
             dataset = dataset.concat(importDataSet)
             localStorage.setItem('dataset', JSON.stringify(dataset))
-            console.log('localStorage dataset: ', localStorage.dataset)
+            this.setState({twits: (JSON.parse(localStorage.dataset)) })
             swal('Added', 'Added recent tweets to dataset', 'success')
           }
         })
@@ -105,7 +102,6 @@ class Home extends Component {
   }
 
   normalizeTweets (tweets, screen_name) {
-    console.log('weill normalize: ', tweets)
     let normalizedTweets = []
     tweets.map( tweet => {
       if (tweet.text.substring(0,2) !== 'RT' && tweet.user.screen_name === screen_name) {
@@ -123,7 +119,6 @@ class Home extends Component {
 
   renderSearchResult () {
     const { searchedUsers } = this.state
-    console.log(searchedUsers)
     if (searchedUsers.length > 0) {
       return searchedUsers.map( user => {
         return (
@@ -182,7 +177,7 @@ class Home extends Component {
         return this.add()
         break
       default:
-        return this.add()
+        return this.main()
     }
   }
 }
