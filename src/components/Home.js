@@ -1,6 +1,7 @@
 import React, { Component, Fragment } from 'react'
 import Avatar from 'material-ui/Avatar'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
+import FlatButton from 'material-ui/FlatButton'
 import IconButton from 'material-ui/IconButton'
 import ArrowBack from 'material-ui/svg-icons/navigation/arrow-back'
 import Ionicon from 'react-ionicons'
@@ -14,6 +15,8 @@ import swal from 'sweetalert'
 class Home extends Component {
   constructor () {
     super()
+    this.guessTweet = this.guessTweet.bind(this)
+    this.gotoGuessTweet = this.gotoGuessTweet.bind(this)
     this.addUser = this.addUser.bind(this)
     this.renderSearchResult = this.renderSearchResult.bind(this)
     this.searchUser = this.searchUser.bind(this)
@@ -26,16 +29,31 @@ class Home extends Component {
     }
   }
 
-  componentDidMount () {
+  gotoGuessTweet () {
+    const { twits } = this.state
+    if (twits.length > 0) {
+      this.setState({ screen: 'guess' })
+    } else {
+      swal('No Datasets','Try adding tweets to datasets','info')
+    }
   }
 
   addButton () {
     return (
-      <FloatingActionButton
-        style={{position: 'fixed', bottom: 30, right: 30}}
-        onClick={ () => this.setState({screen: 'add', searchedUsers: []}) }>
-        <Ionicon icon="md-add" fontSize='30px'/>
-      </FloatingActionButton>
+      <Fragment>
+        <FloatingActionButton
+          mini
+          secondary
+          style={{position: 'fixed', bottom: 100, right: 38}}
+          onClick={ this.gotoGuessTweet }>
+          <Ionicon icon="logo-twitter" fontSize='20px'/>
+        </FloatingActionButton>
+        <FloatingActionButton
+          style={{position: 'fixed', bottom: 30, right: 30}}
+          onClick={ () => this.setState({screen: 'add', searchedUsers: []}) }>
+          <Ionicon icon="md-add" fontSize='30px'/>
+        </FloatingActionButton>
+      </Fragment>
     )
   }
 
@@ -52,8 +70,6 @@ class Home extends Component {
     return twits.map( (twit, i) => {
       return <tr key={i}>
         <td><img src={twit.img} className='img-circle' /></td>
-        <td>{twit.username}</td>
-        <td>{twit.name}</td>
         <td>{twit.text}</td>
       </tr>
     })
@@ -101,6 +117,22 @@ class Home extends Component {
     })
   }
 
+  guessTweet () {
+    console.log('will guess tweet')
+    const guess = this.refs.guessTweet.input.value
+    const { twits } = this.state
+    axios({
+      method: 'post',
+      url: 'http://localhost:4000/twit/guess',
+      data: {
+        guess,
+        twits
+      }
+    }).then( data => {
+      console.log('guessed tweet: ', data)
+    })
+  }
+
   normalizeTweets (tweets, screen_name) {
     let normalizedTweets = []
     tweets.map( tweet => {
@@ -143,6 +175,7 @@ class Home extends Component {
       <Fragment>
         { this.backButton('main') } <br />
         <div style={{width: '90%', paddingLeft: '5%'}}>
+          <h2> Add Tweet to Dataset </h2>
           <TextField fullWidth hintText="Search Twitter username" onChange={ e => this.searchUser(e)}/>
         </div>
         <div>
@@ -151,6 +184,22 @@ class Home extends Component {
       </Fragment>
     )
   }
+
+  guess () {
+    return (
+      <Fragment>
+        { this.backButton() }
+        <div style={{width: '90%', paddingLeft: '5%'}}>
+          <h2> Guess the Tweet </h2>
+          <div style={{display: 'flex'}}>
+            <TextField fullWidth hintText="We will guess who would tweet this" ref='guessTweet'/>
+            <FlatButton label='GUESS' primary onClick={this.guessTweet}/>
+          </div>
+        </div>
+      </Fragment>
+    )
+  }
+
   main () {
     return (
       <Fragment>
@@ -159,8 +208,6 @@ class Home extends Component {
           <thead>
             <tr>
               <th></th>
-              <th>Username</th>
-              <th>Name</th>
               <th>Tweet</th>
             </tr>
           </thead>
@@ -175,6 +222,9 @@ class Home extends Component {
     switch (screen) {
       case 'add':
         return this.add()
+        break
+      case 'guess':
+        return this.guess()
         break
       default:
         return this.main()
