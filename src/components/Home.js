@@ -15,6 +15,8 @@ import swal from 'sweetalert'
 class Home extends Component {
   constructor () {
     super()
+    this.addButton = this.addButton.bind(this)
+    this.learn = this.learn.bind(this)  
     this.guessTweet = this.guessTweet.bind(this)
     this.gotoGuessTweet = this.gotoGuessTweet.bind(this)
     this.addUser = this.addUser.bind(this)
@@ -25,6 +27,8 @@ class Home extends Component {
     this.state = {
       screen: 'main',
       twits: localStorage.dataset === undefined ? [] : JSON.parse(localStorage.dataset),
+      learned: localStorage.learned === undefined ? false : JSON.parse(localStorage.learned),
+      users: localStorage.users === undefined ? [] : JSON.parse(localStorage.users),
       searchedUsers: []
     }
   }
@@ -39,16 +43,27 @@ class Home extends Component {
   }
 
   addButton () {
+    const { learned, users } = this.state
     return (
       <Fragment>
         <FloatingActionButton
           mini
           secondary
-          style={{position: 'fixed', bottom: 100, right: 38}}
+          disabled={ learned === false }
+          style={{position: 'fixed', bottom: 150, right: 38}}
           onClick={ this.gotoGuessTweet }>
           <Ionicon icon="logo-twitter" fontSize='20px'/>
         </FloatingActionButton>
         <FloatingActionButton
+          mini
+          default
+          disabled={ learned || users.length < 2 }
+          style={{position: 'fixed', bottom: 100, right: 38}}
+          onClick={ this.learn }>
+          <Ionicon icon="md-cloud-upload" fontSize='20px'/>
+        </FloatingActionButton>
+        <FloatingActionButton
+          disabled={ learned || users.length === 3 }
           style={{position: 'fixed', bottom: 30, right: 30}}
           onClick={ () => this.setState({screen: 'add', searchedUsers: []}) }>
           <Ionicon icon="md-add" fontSize='30px'/>
@@ -110,6 +125,12 @@ class Home extends Component {
             dataset = dataset.concat(importDataSet)
             localStorage.setItem('dataset', JSON.stringify(dataset))
             this.setState({twits: (JSON.parse(localStorage.dataset)) })
+
+            let users = localStorage.users === undefined ? [] : JSON.parse(localStorage.users)
+            users = users.concat(user)
+            localStorage.setItem('users', JSON.stringify(users))
+            this.setState({ users })
+
             swal('Added', 'Added recent tweets to dataset', 'success')
           }
         })
@@ -133,6 +154,36 @@ class Home extends Component {
     })
   }
 
+  learn () {
+    swal("Upload tweets and train AI ?","This will replace the previous memories of the AI", {
+      buttons: {
+        cancel: "Back",
+        TRAIN: true,
+      },
+    }).then( value => {
+      if (value === 'TRAIN') {
+        swal("TRAINING AI . . .", {
+          closeOnClickOutside: false,
+          buttons: {}
+        })
+        const { twits } = this.state
+        axios({
+          method: 'post',
+          url: 'http://localhost:4000/twit/learn',
+          data: { twits }
+        }).then( data => {
+          swal('Done', 'Successfully trained AI with tweets', 'success')
+
+          const learned = true
+          localStorage.setItem('learned', JSON.stringify(learned))
+          this.setState({ learned })
+
+          console.log('learned ', data)
+        })
+      }
+    })
+  }
+
   normalizeTweets (tweets, screen_name) {
     let normalizedTweets = []
     tweets.map( tweet => {
@@ -142,7 +193,8 @@ class Home extends Component {
           username: tweet.user.screen_name,
           img: tweet.user.profile_image_url,
           name: tweet.user.name,
-          text: tweet.text
+          text: tweet.text,
+          output: { [tweet.user.screen_name]: 1 }
         })
       }
     })
