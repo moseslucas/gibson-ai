@@ -4,6 +4,7 @@ import FloatingActionButton from 'material-ui/FloatingActionButton'
 import FlatButton from 'material-ui/FlatButton'
 import IconButton from 'material-ui/IconButton'
 import ArrowBack from 'material-ui/svg-icons/navigation/arrow-back'
+import Paper from 'material-ui/Paper'
 import Ionicon from 'react-ionicons'
 import TextField from 'material-ui/TextField'
 import {List, ListItem} from 'material-ui/List'
@@ -29,7 +30,8 @@ class Home extends Component {
       twits: localStorage.dataset === undefined ? [] : JSON.parse(localStorage.dataset),
       learned: localStorage.learned === undefined ? false : JSON.parse(localStorage.learned),
       users: localStorage.users === undefined ? [] : JSON.parse(localStorage.users),
-      searchedUsers: []
+      searchedUsers: [],
+      guessedUser: {name: '', username: '', img: ''}
     }
   }
 
@@ -144,9 +146,9 @@ class Home extends Component {
   }
 
   guessTweet () {
-    console.log('will guess tweet')
+    this.setState({ guessedUser: {} })
     const guess = this.refs.guessTweet.input.value
-    const { twits } = this.state
+    const { twits, users } = this.state
     axios({
       method: 'post',
       url: 'http://localhost:4000/twit/guess',
@@ -155,6 +157,14 @@ class Home extends Component {
         twits
       }
     }).then( data => {
+      const user = users.filter( user => user.screen_name === data.data )
+      this.setState({
+        guessedUser: {
+          name: user[0].name,
+          username: `@${user[0].screen_name}`,
+          img: user[0].profile_image_url
+        }
+      })
       console.log('guessed tweet: ', data)
     })
   }
@@ -244,6 +254,14 @@ class Home extends Component {
   }
 
   guess () {
+    const { guessedUser } = this.state
+    const style = {
+      height: 100,
+      margin: 20,
+      textAlign: 'center',
+      display: 'flex',
+      flex: 1
+    }
     return (
       <Fragment>
         { this.backButton() }
@@ -252,6 +270,17 @@ class Home extends Component {
           <div style={{display: 'flex'}}>
             <TextField fullWidth hintText="We will guess who would tweet this" ref='guessTweet'/>
             <FlatButton label='GUESS' primary onClick={this.guessTweet}/>
+          </div>
+          <div style={{display: 'flex', justifyContent: 'space-around'}}>
+            <Paper style={style} zDepth={2}>
+              <List>
+                <ListItem
+                  secondaryText={<p><span>{guessedUser.username}</span></p>}
+                  secondaryTextLines={4}
+                  primaryText={guessedUser.name}
+                  leftAvatar={<Avatar src={guessedUser.img} />} />
+              </List>
+            </Paper>
           </div>
         </div>
       </Fragment>
