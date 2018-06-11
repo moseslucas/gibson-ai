@@ -101,41 +101,46 @@ class Home extends Component {
   }
 
   addUser (user) {
-    swal("Add to Dataset ?", {
-      buttons: {
-        cancel: "Back",
-        add: true,
-      },
-    })
-    .then((value) => {
-      if (value === 'add') {
-        axios({
-          method: 'post',
-          url: 'http://localhost:4000/twit/tweets',
-          data: {
-            q: user.screen_name
-          }
-        }).then( data => {
-          if (data.data.error === 'Not authorized.') {
-            swal('Private Account', 'We can only get tweets from Public Accounts', 'warning')
-          } else {
-            let dataset = localStorage.dataset === undefined ? [] : JSON.parse(localStorage.dataset)
-            let importDataSet = this.normalizeTweets(data.data, user.screen_name)
-            dataset = dataset.filter( ds => ds.username !== importDataSet[0].username )
-            dataset = dataset.concat(importDataSet)
-            localStorage.setItem('dataset', JSON.stringify(dataset))
-            this.setState({twits: (JSON.parse(localStorage.dataset)) })
+    const { users } = this.state
+    if (users.length < 3) {
+      swal("Add to Dataset ?", {
+        buttons: {
+          cancel: "Back",
+          add: true,
+        },
+      })
+      .then((value) => {
+        if (value === 'add') {
+          axios({
+            method: 'post',
+            url: 'http://localhost:4000/twit/tweets',
+            data: {
+              q: user.screen_name
+            }
+          }).then( data => {
+            if (data.data.error === 'Not authorized.') {
+              swal('Private Account', 'We can only get tweets from Public Accounts', 'warning')
+            } else {
+              let dataset = localStorage.dataset === undefined ? [] : JSON.parse(localStorage.dataset)
+              let importDataSet = this.normalizeTweets(data.data, user.screen_name)
+              dataset = dataset.filter( ds => ds.username !== importDataSet[0].username )
+              dataset = dataset.concat(importDataSet)
+              localStorage.setItem('dataset', JSON.stringify(dataset))
+              this.setState({twits: (JSON.parse(localStorage.dataset)) })
 
-            let users = localStorage.users === undefined ? [] : JSON.parse(localStorage.users)
-            users = users.concat(user)
-            localStorage.setItem('users', JSON.stringify(users))
-            this.setState({ users })
+              let users = localStorage.users === undefined ? [] : JSON.parse(localStorage.users)
+              users = users.concat(user)
+              localStorage.setItem('users', JSON.stringify(users))
+              this.setState({ users })
 
-            swal('Added', 'Added recent tweets to dataset', 'success')
-          }
-        })
-      }
-    })
+              swal('Added', 'Added recent tweets to dataset', 'success')
+            }
+          })
+        }
+      })
+    } else {
+      swal('Maximum 3', 'You can only add up to 3 users tweets', 'warning')
+    }
   }
 
   guessTweet () {
@@ -223,11 +228,12 @@ class Home extends Component {
   }
 
   add () {
+    const { users } = this.state
     return (
       <Fragment>
         { this.backButton('main') } <br />
         <div style={{width: '90%', paddingLeft: '5%'}}>
-          <h2> Add Tweet to Dataset </h2>
+          <h2> Add Tweet to Dataset <small> ( {3-users.length} ) </small></h2>
           <TextField fullWidth hintText="Search Twitter username" onChange={ e => this.searchUser(e)}/>
         </div>
         <div>
