@@ -95,7 +95,7 @@ class Home extends Component {
   searchUser (e) {
     axios({
       method: 'post',
-      url: 'http://localhost:4000/twit/search',
+      url: 'https://gibson-ai-api-twit.herokuapp.com/twit/search',
       data: {
         q: e.target.value
       }
@@ -115,7 +115,7 @@ class Home extends Component {
         if (value === 'add') {
           axios({
             method: 'post',
-            url: 'http://localhost:4000/twit/tweets',
+            url: 'https://gibson-ai-api-twit.herokuapp.com/twit/tweets',
             data: {
               q: user.screen_name
             }
@@ -151,7 +151,7 @@ class Home extends Component {
     const { twits, users } = this.state
     axios({
       method: 'post',
-      url: 'http://localhost:4000/twit/guess',
+      url: 'https://gibson-ai-api-twit.herokuapp.com/twit/guess',
       data: {
         guess,
         twits
@@ -184,7 +184,7 @@ class Home extends Component {
         const { twits } = this.state
         axios({
           method: 'post',
-          url: 'http://localhost:4000/twit/learn',
+          url: 'https://gibson-ai-api-twit.herokuapp.com/twit/learn',
           data: { twits }
         }).then( data => {
           swal('Done', 'Successfully trained AI with tweets', 'success')
