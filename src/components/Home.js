@@ -266,7 +266,7 @@ class Home extends Component {
       <Fragment>
         { this.backButton() }
         <div style={{width: '90%', paddingLeft: '5%'}}>
-          <h2> Guess the Tweet </h2>
+          <h2> This Tweet is for . . . </h2>
           <div style={{display: 'flex'}}>
             <TextField fullWidth hintText="We will guess who would tweet this" ref='guessTweet'/>
             <FlatButton label='GUESS' primary onClick={this.guessTweet}/>
